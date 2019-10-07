@@ -7,7 +7,8 @@ public class RelayMessage {
     }
 
     public static void sendMessageFromSlackToIRC(String message) {
-        Main.ircBot.sendMessage(BotConstants.IRC_CHANNEL, message);
+//        Main.ircBot.sendMessage(BotConstants.IRC_CHANNEL, message);
+        Main.ircBot.getUserChannelDao().getChannel(BotConstants.IRC_CHANNEL).send().message(message);
     }
 
 }

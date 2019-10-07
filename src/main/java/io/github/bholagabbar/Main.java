@@ -2,18 +2,42 @@ package io.github.bholagabbar;
 
 import static io.github.bholagabbar.BotConstants.*;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+
+import org.pircbotx.Configuration;
+import org.pircbotx.Configuration.ServerEntry;
+import org.pircbotx.PircBotX;
+import org.pircbotx.cap.SASLCapHandler;
+import org.pircbotx.hooks.managers.BackgroundListenerManager;
+import org.pircbotx.hooks.managers.ThreadedListenerManager;
+
 public class Main {
 
-    public static IRCBot ircBot;
+    public static PircBotX ircBot;
     public static SlackBot slackBot;
 
     private static void setupIRCBot() throws Exception {
-        ircBot = new io.github.bholagabbar.IRCBot(IRC_BOT_NAME);
-        ircBot.setVerbose(true);
-        ircBot.connect(BotConstants.IRC_SERVER);
-        ircBot.joinChannel(BotConstants.IRC_CHANNEL);
+    	
+    	IRCBot listener = new IRCBot();
+    	
+    	ThreadedListenerManager  myListenerManager = new ThreadedListenerManager ();
+    	myListenerManager.addListener(listener);
+
+    	Configuration config = new Configuration.Builder()
+    		    .setName(IRC_BOT_NAME) //Nick of the bot. CHANGE IN YOUR CODE
+    		    .setLogin("PircBotXUser") //Login part of hostmask, eg name:login@host
+    		    .addAutoJoinChannel(BotConstants.IRC_CHANNEL) //Join #pircbotx channel on connect
+    		    .addCapHandler(new SASLCapHandler(BotConstants.IRC_BOT_NAME,BotConstants.IRC_PASSWORD))
+    	    	.setListenerManager(myListenerManager)
+    		    .buildForServer(BotConstants.IRC_SERVER, BotConstants.IRC_PORT); //Create an immutable configuration from this builder
+    	
+        ircBot = new PircBotX(config);
+//        ircBot.setVerbose(true);
+        ircBot.startBot();
         if (BotConstants.IRC_JOIN_MESSAGE_NOTIFICATION.equals("true")) {
-            ircBot.sendMessage(BotConstants.IRC_CHANNEL, BotConstants.IRC_JOIN_MSG);
+//            ircBot.sendMessage(BotConstants.IRC_CHANNEL, BotConstants.IRC_JOIN_MSG);
+            ircBot.getUserChannelDao().getChannel(BotConstants.IRC_CHANNEL).send().message("test join message");
         }
     }
 
@@ -34,8 +58,8 @@ public class Main {
 
     public static void main(String[] args) throws Exception {
         new BotConstants();
-        setupIRCBot();
         setupSlackBot();
+        setupIRCBot();
     }
 
 }
